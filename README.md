@@ -1,15 +1,179 @@
 # NGES — Nexus Growth Evaluation Standard
 
-NGES는 AI 시스템의 **현재 성능**과 **성장 속도**를 통합 측정하는 Nexus AI 전용 평가 프레임입니다.
+> **"How fast is your AI growing?"**
+> NGES measures not just what an AI can do today, but how quickly and stably it improves over time.
 
-단순 벤치마크 점수를 넘어, 시간에 따라 시스템이 얼마나 빠르고 안정적으로 발전하는지를 수치화합니다.
+Most benchmarks take a snapshot. NGES tracks the trajectory.
 
-## 핵심 공식
+---
+
+## Why NGES?
+
+Standard benchmarks ask: *"How good is this model right now?"*
+
+NGES asks: *"Is this model actually getting smarter over time?"*
+
+This matters most for:
+- Self-improving agents with Dream/Reflection loops
+- Multi-module AI architectures
+- Long-term research systems where growth rate > current score
+
+---
+
+## How It Works
+
+NGES scores a model across three axes:
+
+| Axis | What It Measures | Weight |
+|------|-----------------|--------|
+| **A — Current Capability** | Accuracy, reasoning, memory, consistency | 35% |
+| **B — Growth Velocity** | Improvement speed, feedback response, self-correction | 45% |
+| **C — Structural Efficiency** | Resource usage, module collaboration, complexity stability | 20% |
 
 ```
-NGES = (현재 능력 × 0.35) + (성장 속도 × 0.45) + (구조 효율 × 0.20)
+NGES = (A × 0.35) + (B × 0.45) + (C × 0.20)
 ```
 
-## 문서
+Growth is tracked with **NGI (NGES Growth Index)**:
+```
+NGI = (NGES_current - NGES_previous) / cycles
+```
 
-- [NGES v1.0 공식 정의서](./NGES_v1.0_Definition.md) — 항목별 점수표, 계산식, 등급표, 활용 시나리오 포함
+### Grade Table
+
+| Grade | Score | Meaning |
+|-------|-------|---------|
+| S | 90–100 | Exceptional performance + fast growth |
+| A | 75–89  | Strong growth, most axes excellent |
+| B | 60–74  | Above average, room to improve |
+| C | 45–59  | One axis notably weak |
+| D | 30–44  | Needs work across the board |
+| F | 0–29   | Fundamental redesign needed |
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/parksy1625/NGES.git
+cd NGES
+pip install -r requirements.txt
+
+# Run cycle 1
+python main.py run --model claude --cycle 1
+
+# Run cycle 2 (growth metrics activate)
+python main.py run --model claude --cycle 2 --judge claude-haiku
+
+# View full history
+python main.py report --model claude
+```
+
+**Supported models out of the box:**
+
+| Alias | Model |
+|-------|-------|
+| `claude` | claude-opus-4-6 |
+| `claude-sonnet` | claude-sonnet-4-6 |
+| `claude-haiku` | claude-haiku-4-5 |
+| `gpt4o` | gpt-4o |
+| `gpt4o-mini` | gpt-4o-mini |
+
+Custom models: `python main.py run --model anthropic:your-model-id`
+
+---
+
+## Example Output
+
+```
+╭─────────────────────────────────────────╮
+│         NGES Benchmark Report           │
+│  Model: anthropic:claude-opus-4-6       │
+│  Cycle: 2                               │
+╰─────────────────────────────────────────╯
+
+ Axis Breakdown
+┌────┬──────────────────────┬───────┬──────┬────────┐
+│ A1 │ 문제 해결 정확도     │  27.0 │   30 │   90%  │
+│ A2 │ 추론 품질            │  21.5 │   25 │   86%  │
+│ A3 │ 기억 회수 정확성     │  18.0 │   20 │   90%  │
+│ A4 │ 응답 일관성          │  13.0 │   15 │   87%  │
+│ A5 │ 장기 목표 유지력     │   8.5 │   10 │   85%  │
+│    │ Axis A 합계          │  88.0 │  100 │   88%  │
+├────┼──────────────────────┼───────┼──────┼────────┤
+│ B1 │ 개선 속도            │  20.0 │   25 │   80%  │
+│ B2 │ 피드백 반응성        │  16.0 │   20 │   80%  │
+│ B3 │ 새 환경 적응력       │  14.0 │   20 │   70%  │
+│ B4 │ 자가 수정 효과       │  18.0 │   20 │   90%  │
+│ B5 │ 성장 누적성          │  12.0 │   15 │   80%  │
+│    │ Axis B 합계          │  80.0 │  100 │   80%  │
+├────┼──────────────────────┼───────┼──────┼────────┤
+│ C1 │ 자원 대비 성능       │  28.0 │   35 │   80%  │
+│ C2 │ 모듈 협업 효율       │  35.0 │   35 │  100%  │
+│ C3 │ 복잡도 안정성        │  25.0 │   30 │   83%  │
+│    │ Axis C 합계          │  88.0 │  100 │   88%  │
+└────┴──────────────────────┴───────┴──────┴────────┘
+
+╭──────────────────────────────╮
+│  NGES 총점: 83.55 / 100      │
+│  Grade: A                    │
+│  NGI: +12.30/사이클 — 건강한 성장  │
+╰──────────────────────────────╯
+```
+
+---
+
+## Benchmark Tasks
+
+NGES ships with 33 built-in tasks across 6 files:
+
+| File | Axis | Tasks | Types |
+|------|------|-------|-------|
+| `a1_problem_solving.json` | A1 | 10 | Math, logic, code, factual |
+| `a2_reasoning.json` | A2 | 5 | Causal, deductive, counterfactual |
+| `a3_memory_recall.json` | A3 | 5 | Multi-turn memory injection |
+| `a4_consistency.json` | A4 | 5 | Repeated prompt consistency |
+| `a5_goal_tracking.json` | A5 | 2 | Long multi-turn goal scenarios |
+| `b3_adaptation.json` | B3 | 6 | Novel domain adaptation |
+
+Adding your own tasks is straightforward — drop a JSON file following the schema in [`NGES_v1.0_Definition.md`](./NGES_v1.0_Definition.md).
+
+---
+
+## Project Structure
+
+```
+NGES/
+├── main.py                  # CLI entry point
+├── config.yaml              # Weights, thresholds, baselines
+├── requirements.txt
+├── nges/
+│   ├── calculator.py        # Scoring formula & grade table
+│   ├── history.py           # Cycle result persistence
+│   ├── runner.py            # Benchmark orchestrator
+│   ├── reporter.py          # Terminal output (rich)
+│   ├── models/              # Anthropic & OpenAI adapters
+│   ├── axes/                # A / B / C evaluators
+│   ├── judge/               # LLM-as-Judge module
+│   └── tasks/               # Task loader & schema validation
+└── tasks/                   # Built-in benchmark task files
+```
+
+---
+
+## Requirements
+
+- Python 3.10+
+- `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` set as environment variables
+
+---
+
+## Documentation
+
+- [NGES v1.0 Official Definition](./NGES_v1.0_Definition.md) — Full scoring spec, formulas, grade table
+
+---
+
+## License
+
+Apache License 2.0 — Copyright 2026 Park Se Yeon
