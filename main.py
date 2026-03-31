@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""
+NGES — Nexus Growth Evaluation Standard
+벤치마크 CLI 진입점
+
+사용법:
+  python main.py run   --model claude --cycle 1
+  python main.py run   --model claude --cycle 2 --judge claude-haiku
+  python main.py report --model claude
+  python main.py list-models
+"""
+
+from __future__ import annotations
+import json
+import sys
+from pathlib import Path
+
+import click
+
+try:
+    import yaml
+    _HAS_YAML = True
+except ImportError:
+    _HAS_YAML = False
+
+
+# ── 설정 로드 ─────────────────────────────────────────────────────────
+
+def load_config(config_path: str = "./config.yaml") -> dict:
+    path = Path(config_path)
+    if not path.exists():
+        return {}
+    if _HAS_YAML:
+        with open(path, encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    # yaml 없으면 빈 설정
+    return {}
+
+
+# ── CLI 그룹 ──────────────────────────────────────────────────────────
+
+@click.group()
+@click.version_option("1.0.0", prog_name="NGES")
+def cli():
+    """NGES — Nexus Growth Evaluation Standard 벤치마크 도구."""
+    pass
+
+
+# ── run 커맨드 ────────────────────────────────────────────────────────
+
+@cli.command()
+@click.option("--model",   required=True,  help="평가할 모델 (예: claude, gpt4o, anthropic:claude-opus-4-6)")
+@click.option("--cycle",   default=None,   type=int, help="사이클 번호. 미지정 시 마지막 사이클 + 1 자동 계산")
+@click.option("--judge",   default=None,   help="Judge 모델 (미지정 시 config.yaml 기본값 사용)")
+@click.option("--tasks",   default=None,   help="태스크 디렉터리 경로 (기본: ./tasks)")
+@click.option("--history", default=None,   help="히스토리 디렉터리 경로 (기본: ./history)")
+@click.option("--config",  default="./config.yaml", help="설정 파일 경로")
+@click.option("--save-report", is_flag=True, default=False, help="JSON 리포트를 ./reports/ 에 저장")
+def run(model, cycle, judge, tasks, history, config, save_report):
+    """AI 모델을 NGES 기준으로 벤치마크 실행."""
+    cfg = load_config(config)
+
+    # 경로 결정
+    tasks_path   = tasks   or cfg.get("tasks",   {}).get("path",   "./tasks")
+    history_path = history or cfg.get("history", {}).get("path",   "./history")
+    reports_path = cfg.get("reports", {}).get("path", "./reports")
+
+    # C1 기준값
+    scoring = cfg.get("scoring", {})
+    baseline_time = scoring.get("c1_baseline_time_ms", 3000)
+    baseline_mem  = scoring.get("c1_baseline_mem_mb",  150)
+
+    # 모듈 임포트 (lazy — 설치 확인)
+    try:
+        from nges.models.registry import get_model
+        from nges.judge.llm_judge import LLMJudge
+        from nges.tasks.loader import TaskLoader
+        from nges.history import HistoryManager
+        from nges.runner import NGESRunner
+        from nges.reporter import print_report
+    except ImportError as e:
+        click.echo(f"[오류] 필요한 패키지가 없습니다: {e}", err=True)
+        click.echo("pip install -r requirements.txt 를 먼저 실행하세요.", err=True)
+        sys.exit(1)
+
+    # 모델 초기화
+    click.echo(f"모델 초기화: {model}")
+    try:
+        target_model = get_model(model)
+    except (ValueError, ImportError) as e:
+        click.echo(f"[오류] {e}", err=True)
+        sys.exit(1)
+
+    # Judge 모델
+    judge_name = judge or cfg.get("judge", {}).get("default_model", model)
+    click.echo(f"Judge 모델: {judge_name}")
+    try:
+        judge_model = get_model(judge_name)
+    except (ValueError, ImportError) as e:
+        click.echo(f"[경고] Judge 모델 초기화 실패 ({e}), 피평가 모델을 Judge로 사용합니다.", err=True)
+        judge_model = target_model
+
+    llm_judge = LLMJudge(judge_model)
+
+    # 히스토리 + 태스크 초기화
+    history_mgr  = HistoryManager(history_path)
+    task_loader  = TaskLoader(tasks_path)
+
+    # 사이클 번호 결정
+    if cycle is None:
+        cycle = history_mgr.latest_cycle(target_model.name) + 1
+        click.echo(f"사이클 자동 계산: {cycle}")
+    else:
+        click.echo(f"사이클: {cycle}")
+
+    # 실행
+    click.echo(f"\n{'='*50}")
+    click.echo(f"NGES 벤치마크 시작 — {target_model.name} / Cycle {cycle}")
+    click.echo(f"{'='*50}\n")
+
+    runner = NGESRunner(
+        model=target_model,
+        judge=llm_judge,
+        task_loader=task_loader,
+        history_manager=history_mgr,
+        baseline_time_ms=baseline_time,
+        baseline_mem_mb=baseline_mem,
+    )
+
+    try:
+        result = runner.run(cycle=cycle)
+    except Exception as e:
+        click.echo(f"\n[오류] 벤치마크 실행 중 예외 발생: {e}", err=True)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+
+    # 리포트 출력
+    print_report(result)
+
+    # JSON 저장
+    if save_report:
+        Path(reports_path).mkdir(parents=True, exist_ok=True)
+        report_path = Path(reports_path) / f"{result.model_name.replace(':', '_')}_cycle{result.cycle:04d}_report.json"
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(result.to_dict(), f, indent=2, ensure_ascii=False)
+        click.echo(f"\n리포트 저장: {report_path}")
+
+
+# ── report 커맨드 ─────────────────────────────────────────────────────
+
+@cli.command()
+@click.option("--model",   required=True, help="조회할 모델 이름")
+@click.option("--history", default=None,  help="히스토리 디렉터리 경로")
+@click.option("--config",  default="./config.yaml")
+def report(model, history, config):
+    """저장된 모든 사이클의 NGES 이력을 출력한다."""
+    cfg = load_config(config)
+    history_path = history or cfg.get("history", {}).get("path", "./history")
+
+    try:
+        from nges.history import HistoryManager
+        from nges.reporter import print_history_report
+        from nges.models.registry import get_model
+    except ImportError as e:
+        click.echo(f"[오류] {e}", err=True)
+        sys.exit(1)
+
+    history_mgr = HistoryManager(history_path)
+
+    # 모델 이름 정규화 (registry 통해 name 속성 사용)
+    try:
+        m = get_model(model)
+        model_name = m.name
+    except Exception:
+        model_name = model
+
+    all_cycles = history_mgr.load_all(model_name)
+    print_history_report(all_cycles, model_name)
+
+
+# ── list-models 커맨드 ────────────────────────────────────────────────
+
+@cli.command("list-models")
+def list_models():
+    """사용 가능한 모델 단축명 목록을 출력한다."""
+    from nges.models.registry import MODEL_REGISTRY
+    click.echo("\n사용 가능한 모델 단축명:")
+    click.echo(f"  {'단축명':<20} {'Provider':<12} {'Model ID'}")
+    click.echo("  " + "-" * 50)
+    for alias, (provider, model_id) in MODEL_REGISTRY.items():
+        click.echo(f"  {alias:<20} {provider:<12} {model_id}")
+    click.echo("\n커스텀 형식: 'provider:model_id' (예: anthropic:claude-opus-4-6)")
+
+
+# ── 진입점 ────────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    cli()

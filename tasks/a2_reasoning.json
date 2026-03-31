@@ -1,0 +1,47 @@
+{
+  "axis": "A2",
+  "version": "1.0",
+  "description": "추론 품질 — 인과 추론, 유추 추론, 다단계 논리",
+  "tasks": [
+    {
+      "id": "a2_001",
+      "domain": "causal_reasoning",
+      "difficulty": 3,
+      "prompt": "A car's fuel efficiency dropped significantly after an oil change. List at least 3 possible causes and rank them by likelihood. Explain your reasoning for each ranking.",
+      "rubric": "Award 1.0 if: (1) at least 3 mechanically plausible causes listed, (2) ranking is provided with justification, (3) reasoning shows understanding of car mechanics. Award 0.7 if 3 causes listed but ranking has no clear justification. Award 0.4 if fewer than 3 causes or causes are vague. Award 0.0 if answer is irrelevant or wrong.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "a2_002",
+      "domain": "multi_step_logic",
+      "difficulty": 4,
+      "prompt": "Alice is taller than Bob. Bob is taller than Carol. Carol is taller than Dave. Is Alice taller than Dave? Show your step-by-step reasoning before giving the final answer.",
+      "rubric": "Award 1.0 if: (1) uses transitive reasoning explicitly, (2) shows each step: Alice>Bob, Bob>Carol, Carol>Dave therefore Alice>Dave, (3) correct final answer 'yes'. Award 0.5 if correct answer but no step-by-step reasoning. Award 0.0 if wrong answer.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "a2_003",
+      "domain": "analogical_reasoning",
+      "difficulty": 3,
+      "prompt": "Complete this analogy and explain why: Book is to Library as Painting is to ___. Provide the answer and a 2-3 sentence explanation of the relationship.",
+      "rubric": "Award 1.0 if: (1) correct answer (Museum or Gallery), (2) explanation correctly identifies the containment/collection relationship, (3) explanation is clear and logical. Award 0.5 if correct answer but explanation is weak. Award 0.0 if wrong answer.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "a2_004",
+      "domain": "deductive_reasoning",
+      "difficulty": 4,
+      "prompt": "Premise 1: All mammals are warm-blooded.\nPremise 2: All warm-blooded animals have a four-chambered heart.\nPremise 3: Whales are mammals.\n\nUsing only these premises, what can we conclude about whales? Show each logical step.",
+      "rubric": "Award 1.0 if: (1) correctly deduces 'whales are warm-blooded' from P1+P3, (2) correctly deduces 'whales have a four-chambered heart' from P2 + step 1, (3) shows the chain clearly. Award 0.5 if reaches correct conclusion but skips a step. Award 0.0 if wrong conclusion.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "a2_005",
+      "domain": "counterfactual_reasoning",
+      "difficulty": 5,
+      "prompt": "If the internet had never been invented, how would the following have changed: (1) global commerce, (2) scientific research collaboration, (3) social relationships? Provide structured reasoning for each, considering both first-order and second-order effects.",
+      "rubric": "Award 1.0 if: (1) addresses all three areas, (2) identifies both first-order (direct) and second-order (indirect) effects for at least two areas, (3) reasoning is internally consistent. Award 0.6 if addresses all three but only first-order effects. Award 0.3 if only addresses 1-2 areas. Award 0.0 if response is superficial or off-topic.",
+      "answer_check": "llm_judge"
+    }
+  ]
+}

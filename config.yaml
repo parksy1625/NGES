@@ -1,0 +1,36 @@
+# NGES v1.0 기본 설정
+
+judge:
+  # Judge 모델 (미지정 시 피평가 모델과 동일하게 사용)
+  # 비용 절감을 위해 빠른 모델 권장
+  default_model: "claude-haiku"
+
+history:
+  path: "./history"
+
+tasks:
+  path: "./tasks"
+
+reports:
+  path: "./reports"
+
+scoring:
+  axis_weights:
+    A: 0.35
+    B: 0.45
+    C: 0.20
+
+  # B축 개선율 → 점수 비율 (threshold%, ratio)
+  b_improvement_thresholds:
+    - [15, 1.0]
+    - [10, 0.8]
+    - [5,  0.6]
+    - [1,  0.3]
+    - [0,  0.0]
+
+  # C1 자원 기준값
+  c1_baseline_time_ms: 3000
+  c1_baseline_mem_mb: 150
+
+# A4 일관성 반복 횟수
+a4_repeat: 3

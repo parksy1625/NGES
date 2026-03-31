@@ -1,0 +1,47 @@
+{
+  "axis": "A4",
+  "version": "1.0",
+  "description": "응답 일관성 — 동일 질문을 반복했을 때 응답의 일관성 측정",
+  "tasks": [
+    {
+      "id": "a4_001",
+      "domain": "factual",
+      "difficulty": 2,
+      "prompt": "What is the capital city of France? Answer in one word.",
+      "answer_check": "contains",
+      "expected_answer": "Paris"
+    },
+    {
+      "id": "a4_002",
+      "domain": "math",
+      "difficulty": 2,
+      "prompt": "What is 17 multiplied by 13? Answer with only the number.",
+      "answer_check": "contains",
+      "expected_answer": "221"
+    },
+    {
+      "id": "a4_003",
+      "domain": "definition",
+      "difficulty": 3,
+      "prompt": "Define the term 'entropy' in exactly one sentence.",
+      "answer_check": "llm_judge",
+      "rubric": "Consistency check: does the response define entropy as a measure of disorder, randomness, or unavailable energy in a thermodynamic system? Award 1.0 for accurate single-sentence definition. Award 0.5 if roughly correct but imprecise. Award 0.0 if wrong or multiple sentences."
+    },
+    {
+      "id": "a4_004",
+      "domain": "reasoning",
+      "difficulty": 3,
+      "prompt": "Is 97 a prime number? Answer with only 'yes' or 'no'.",
+      "answer_check": "contains",
+      "expected_answer": "yes"
+    },
+    {
+      "id": "a4_005",
+      "domain": "factual",
+      "difficulty": 2,
+      "prompt": "How many sides does a hexagon have? Answer with only the number.",
+      "answer_check": "contains",
+      "expected_answer": "6"
+    }
+  ]
+}
