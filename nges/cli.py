@@ -49,7 +49,8 @@ def cli():
 @click.option("--dynamic",  is_flag=True,   default=False, help="LLM이 태스크를 실행마다 동적 생성 (벤치마크 오염 방지)")
 @click.option("--holdout",  is_flag=True,   default=False, help="공개 태스크 대신 비공개 hold-out 세트 사용")
 @click.option("--holdout-version", default=None, help="특정 hold-out 버전 파일명 (기본: 최신)")
-def run(model, cycle, judge, tasks, history, config, save_report, dynamic, holdout, holdout_version):
+@click.option("--quick",    is_flag=True,   default=False, help="퀵 모드: 태스크 9개만, 약 1분 완료")
+def run(model, cycle, judge, tasks, history, config, save_report, dynamic, holdout, holdout_version, quick):
     """AI 모델을 NGES 기준으로 벤치마크 실행."""
     cfg = load_config(config)
 
@@ -68,6 +69,7 @@ def run(model, cycle, judge, tasks, history, config, save_report, dynamic, holdo
         from nges.models.registry import get_model
         from nges.judge.llm_judge import LLMJudge
         from nges.tasks.loader import TaskLoader
+        from nges.tasks.quick_loader import QuickLoader
         from nges.tasks.generator import TaskGenerator
         from nges.tasks.holdout import HoldoutManager
         from nges.history import HistoryManager
@@ -133,6 +135,10 @@ def run(model, cycle, judge, tasks, history, config, save_report, dynamic, holdo
             def load_all(self): return ho_tasks
 
         task_loader = _HoldoutLoader()
+
+    elif quick:
+        click.echo("[퀵 모드] 9개 태스크로 빠른 벤치마크를 실행합니다...")
+        task_loader = QuickLoader(tasks_path)
 
     else:
         task_loader = TaskLoader(tasks_path)

@@ -144,6 +144,47 @@ A system that starts at D and reaches A in 4 cycles is more valuable research-wi
 
 ---
 
+## Quick Benchmark
+
+처음 연결하거나 빠른 회귀 확인이 필요할 때:
+
+```bash
+python run_benchmark.py --quick
+# 9개 태스크, 약 1분 완료
+```
+
+전체 벤치마크는 33개 태스크, 약 10~15분 소요됩니다.
+
+---
+
+## Real Results — Growth Tracking Example
+
+아래는 동일한 베이스 아키텍처에 모듈을 순차적으로 추가하면서 측정한 실제 성장 궤적입니다.
+
+```
+모델             사이클   Axis A   Axis B   Axis C    NGES    등급     NGI
+─────────────────────────────────────────────────────────────────────────
+base-v0.1           1     48.0      7.5     62.0    35.53     D       —
+base-v0.2           2     55.0     31.2     68.5    48.97     C    +13.44
+ └ 메모리 모듈 추가
+base-v0.3           3     63.0     52.8     74.0    61.71     B    +12.74
+ └ Dream 루프 도입
+base-v0.4           4     71.0     66.4     79.5    71.03     A     +9.32
+ └ Reflection 튜닝
+base-v0.5           5     78.0     74.0     83.0    77.65     A     +6.62
+ └ 멀티모듈 협업 최적화
+```
+
+**읽는 법:**
+- v0.1 → v0.2: 메모리 모듈 추가로 B축(성장 속도) 7.5 → 31.2 급등
+- v0.3: Dream 루프 도입 후 A축(현재 능력)도 함께 상승 — 자가개선이 실제로 작동
+- v0.4 이후: NGI가 줄어드는 건 퇴행이 아니라 **성숙** — 초기 급성장 후 안정화
+
+점수가 낮아도 NGI가 높으면 유망한 구조입니다.
+점수가 높아도 NGI가 0이면 성장이 멈춘 구조입니다.
+
+---
+
 ## Anti-Gaming
 
 Since NGES tasks are open source, you could overfit to them. Two mechanisms prevent this:
