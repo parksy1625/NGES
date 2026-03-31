@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "nges"
+version = "1.0.0"
+description = "Nexus Growth Evaluation Standard — benchmark that measures how fast your AI is growing"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Park Se Yeon" }]
+requires-python = ">=3.10"
+keywords = ["ai", "benchmark", "evaluation", "llm", "growth", "nexus"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "anthropic>=0.40.0",
+    "openai>=1.30.0",
+    "psutil>=5.9.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov"]
+
+[project.urls]
+Homepage = "https://github.com/parksy1625/NGES"
+Documentation = "https://github.com/parksy1625/NGES/blob/main/NGES_v1.0_Definition.md"
+Issues = "https://github.com/parksy1625/NGES/issues"
+
+[project.scripts]
+nges = "main:cli"
+
+[tool.setuptools.packages.find]
+include = ["nges*"]
+
+[tool.setuptools.package-data]
+nges = ["../tasks/*.json", "../config.yaml"]

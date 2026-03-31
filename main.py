@@ -3,11 +3,18 @@
 NGES — Nexus Growth Evaluation Standard
 벤치마크 CLI 진입점
 
-사용법:
-  python main.py run   --model claude --cycle 1
-  python main.py run   --model claude --cycle 2 --judge claude-haiku
-  python main.py report --model claude
-  python main.py list-models
+사용법 (pip install 후):
+  nges run    --model claude --cycle 1
+  nges run    --model claude --cycle 2 --judge claude-haiku
+  nges run    --model claude --dynamic
+  nges run    --model claude --holdout
+  nges report --model claude
+  nges generate-holdout --model claude
+  nges list-holdout
+  nges list-models
+
+사용법 (소스에서):
+  python main.py run --model claude --cycle 1
 """
 
 from __future__ import annotations
