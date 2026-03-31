@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=61,<69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,8 +7,7 @@ name = "nges"
 version = "1.0.0"
 description = "Nexus Growth Evaluation Standard — benchmark that measures how fast your AI is growing"
 readme = "README.md"
-license = "Apache-2.0"
-license-files = ["LICENSE"]
+license = { text = "Apache-2.0" }
 authors = [{ name = "Park Se Yeon" }]
 requires-python = ">=3.10"
 keywords = ["ai", "benchmark", "evaluation", "llm", "growth", "nexus"]
