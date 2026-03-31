@@ -1,38 +1,43 @@
 # NGES — Nexus Growth Evaluation Standard
 
-> **"How fast is your AI growing?"**
-> NGES measures not just what an AI can do today, but how quickly and stably it improves over time.
+> **"Is your AI actually getting smarter over time?"**
 
-Most benchmarks take a snapshot. NGES tracks the trajectory.
+Standard benchmarks measure a single snapshot.
+NGES measures the **trajectory** — how fast and how stably your AI is growing across cycles.
+
+Built for researchers and developers who are building their own AI systems.
 
 ---
 
-## Why NGES?
+## Who This Is For
 
-Standard benchmarks ask: *"How good is this model right now?"*
+NGES is designed for:
 
-NGES asks: *"Is this model actually getting smarter over time?"*
+- **Self-improving agents** with Dream/Reflection loops
+- **Multi-module AI systems** where several components collaborate
+- **Long-term AI research** where growth rate matters more than current score
+- **Anyone building their own model** and tracking its development over time
 
-This matters most for:
-- Self-improving agents with Dream/Reflection loops
-- Multi-module AI architectures
-- Long-term research systems where growth rate > current score
+If you just want to benchmark Claude or GPT, this is not the right tool.
+If you are building something and want to know whether it's actually improving — this is for you.
 
 ---
 
 ## How It Works
 
-NGES scores a model across three axes:
+NGES evaluates your AI across three axes over multiple cycles:
 
 | Axis | What It Measures | Weight |
 |------|-----------------|--------|
-| **A — Current Capability** | Accuracy, reasoning, memory, consistency | 35% |
-| **B — Growth Velocity** | Improvement speed, feedback response, self-correction | 45% |
-| **C — Structural Efficiency** | Resource usage, module collaboration, complexity stability | 20% |
+| **A — Current Capability** | Accuracy, reasoning, memory recall, consistency | 35% |
+| **B — Growth Velocity** | Improvement speed, feedback response, self-correction | **45%** |
+| **C — Structural Efficiency** | Response time, module collaboration, complexity stability | 20% |
 
 ```
 NGES = (A × 0.35) + (B × 0.45) + (C × 0.20)
 ```
+
+**B axis carries the most weight** because a system that grows fast will outperform a static high-scorer over time.
 
 Growth is tracked with **NGI (NGES Growth Index)**:
 ```
@@ -52,51 +57,106 @@ NGI = (NGES_current - NGES_previous) / cycles
 
 ---
 
-## Quick Start
+## Connecting Your Model
 
-**Option A — pip install (recommended)**
+You implement one class. That's it.
+
+```python
+# my_model.py
+import time
+from nges.models.base import AbstractModel, ModelResponse
+
+class MyModel(AbstractModel):
+    def __init__(self):
+        self.name = "my-model-v1"
+
+    def complete(self, prompt: str, system: str = "") -> ModelResponse:
+        t0 = time.perf_counter()
+
+        # ↓ 여기에 내 모델 호출
+        output = my_model.generate(prompt)
+
+        return ModelResponse(
+            content=output,
+            response_time_ms=(time.perf_counter() - t0) * 1000,
+            memory_mb=0.0,
+        )
+
+    def multi_turn(self, messages: list[dict], system: str = "") -> ModelResponse:
+        # 대화 이력 → 단일 프롬프트로 변환 후 호출
+        combined = "\n".join(f"{m['role'].upper()}: {m['content']}" for m in messages)
+        return self.complete(combined, system)
+```
+
+Then run the benchmark:
+
+```python
+# run_benchmark.py
+from my_model import MyModel
+from nges.judge.rule_judge import RuleBasedJudge   # no API key needed
+from nges.tasks.loader import TaskLoader
+from nges.history import HistoryManager
+from nges.runner import NGESRunner
+from nges.reporter import print_report
+
+result = NGESRunner(
+    model=MyModel(),
+    judge=RuleBasedJudge(),          # API 키 불필요
+    task_loader=TaskLoader("./tasks"),
+    history_manager=HistoryManager("./history"),
+).run(cycle=1)
+
+print_report(result)
+```
+
+No external API key required. See [CUSTOM_MODEL_GUIDE.md](./CUSTOM_MODEL_GUIDE.md) for detailed examples including HTTP API servers, multi-module systems, and version comparison.
+
+---
+
+## Installation
 
 ```bash
 pip install nges
-
-export ANTHROPIC_API_KEY=your_key   # or OPENAI_API_KEY
-
-nges run --model claude --cycle 1
-nges run --model claude --cycle 2
-nges report --model claude
 ```
 
-**Option B — from source**
+Or from source:
 
 ```bash
 git clone https://github.com/parksy1625/NGES.git
 cd NGES
 pip install -e .
-
-nges run --model claude --cycle 1
 ```
 
-**Supported models out of the box:**
+---
 
-| Alias | Provider | Model ID |
-|-------|----------|----------|
-| `claude` | Anthropic | claude-opus-4-6 |
-| `claude-sonnet` | Anthropic | claude-sonnet-4-6 |
-| `claude-haiku` | Anthropic | claude-haiku-4-5 |
-| `gpt4o` | OpenAI | gpt-4o |
-| `gpt4o-mini` | OpenAI | gpt-4o-mini |
+## Tracking Growth Over Cycles
 
-Custom models: `nges run --model anthropic:your-model-id`
+The real value of NGES appears across multiple cycles:
 
-**Anti-gaming options:**
+```
+Cycle 1 → NGES 38.85  (D)   baseline
+Cycle 2 → NGES 53.80  (C)   +14.95 NGI  ← memory module added
+Cycle 3 → NGES 68.00  (B)   +14.20 NGI  ← Dream loop introduced
+Cycle 4 → NGES 79.40  (A)   +11.40 NGI  ← Reflection tuning
+```
 
+A system that starts at D and reaches A in 4 cycles is more valuable research-wise than a system that stays at B forever.
+
+---
+
+## Anti-Gaming
+
+Since NGES tasks are open source, you could overfit to them. Two mechanisms prevent this:
+
+**Dynamic generation** — LLM generates fresh tasks on every run:
 ```bash
-# Fresh tasks generated by LLM on every run
-nges run --model claude --dynamic
+python run_benchmark.py --dynamic
+```
 
-# Use your private hold-out set (never pushed to git)
-nges generate-holdout --model claude
-nges run --model claude --holdout
+**Private hold-out set** — Generate and store tasks locally, never pushed to git:
+```bash
+nges generate-holdout --model claude   # create private task set
+python run_benchmark.py --holdout      # evaluate on private tasks
 ```
 
 ---
@@ -105,56 +165,34 @@ nges run --model claude --holdout
 
 ```
 ╭─────────────────────────────────────────╮
-│         NGES Benchmark Report           │
-│  Model: anthropic:claude-opus-4-6       │
-│  Cycle: 2                               │
+│  NGES Benchmark — my-model-v2 / Cycle 3 │
 ╰─────────────────────────────────────────╯
 
- Axis Breakdown
-┌────┬──────────────────────┬───────┬──────┬────────┐
-│ A1 │ 문제 해결 정확도     │  27.0 │   30 │   90%  │
-│ A2 │ 추론 품질            │  21.5 │   25 │   86%  │
-│ A3 │ 기억 회수 정확성     │  18.0 │   20 │   90%  │
-│ A4 │ 응답 일관성          │  13.0 │   15 │   87%  │
-│ A5 │ 장기 목표 유지력     │   8.5 │   10 │   85%  │
-│    │ Axis A 합계          │  88.0 │  100 │   88%  │
-├────┼──────────────────────┼───────┼──────┼────────┤
-│ B1 │ 개선 속도            │  20.0 │   25 │   80%  │
-│ B2 │ 피드백 반응성        │  16.0 │   20 │   80%  │
-│ B3 │ 새 환경 적응력       │  14.0 │   20 │   70%  │
-│ B4 │ 자가 수정 효과       │  18.0 │   20 │   90%  │
-│ B5 │ 성장 누적성          │  12.0 │   15 │   80%  │
-│    │ Axis B 합계          │  80.0 │  100 │   80%  │
-├────┼──────────────────────┼───────┼──────┼────────┤
-│ C1 │ 자원 대비 성능       │  28.0 │   35 │   80%  │
-│ C2 │ 모듈 협업 효율       │  35.0 │   35 │  100%  │
-│ C3 │ 복잡도 안정성        │  25.0 │   30 │   83%  │
-│    │ Axis C 합계          │  88.0 │  100 │   88%  │
-└────┴──────────────────────┴───────┴──────┴────────┘
+┌────┬──────────────────────┬───────┬──────┐
+│ A1 │ 문제 해결 정확도     │  24.0 │   30 │
+│ A2 │ 추론 품질            │  18.5 │   25 │
+│ A3 │ 기억 회수 정확성     │  16.0 │   20 │
+│ A4 │ 응답 일관성          │  11.5 │   15 │
+│ A5 │ 장기 목표 유지력     │   7.0 │   10 │
+│    │ Axis A               │  77.0 │  100 │
+├────┼──────────────────────┼───────┼──────┤
+│ B1 │ 개선 속도            │  20.0 │   25 │
+│ B2 │ 피드백 반응성        │  14.0 │   20 │
+│ B3 │ 새 환경 적응력       │  12.0 │   20 │
+│ B4 │ 자가 수정 효과       │  16.0 │   20 │
+│ B5 │ 성장 누적성          │  12.0 │   15 │
+│    │ Axis B               │  74.0 │  100 │
+├────┼──────────────────────┼───────┼──────┤
+│ C1 │ 자원 대비 성능       │  26.0 │   35 │
+│ C2 │ 모듈 협업 효율       │  35.0 │   35 │
+│ C3 │ 복잡도 안정성        │  25.0 │   30 │
+│    │ Axis C               │  86.0 │  100 │
+└────┴──────────────────────┴───────┴──────┘
 
-╭──────────────────────────────╮
-│  NGES 총점: 83.55 / 100      │
-│  Grade: A                    │
-│  NGI: +12.30/사이클 — 건강한 성장  │
-╰──────────────────────────────╯
+  NGES 총점: 76.45 / 100
+  Grade: A
+  NGI: +12.30/사이클 — 건강한 성장
 ```
-
----
-
-## Benchmark Tasks
-
-NGES ships with 33 built-in tasks across 6 files:
-
-| File | Axis | Tasks | Types |
-|------|------|-------|-------|
-| `a1_problem_solving.json` | A1 | 10 | Math, logic, code, factual |
-| `a2_reasoning.json` | A2 | 5 | Causal, deductive, counterfactual |
-| `a3_memory_recall.json` | A3 | 5 | Multi-turn memory injection |
-| `a4_consistency.json` | A4 | 5 | Repeated prompt consistency |
-| `a5_goal_tracking.json` | A5 | 2 | Long multi-turn goal scenarios |
-| `b3_adaptation.json` | B3 | 6 | Novel domain adaptation |
-
-Adding your own tasks is straightforward — drop a JSON file following the schema in [`NGES_v1.0_Definition.md`](./NGES_v1.0_Definition.md).
 
 ---
 
@@ -162,33 +200,28 @@ Adding your own tasks is straightforward — drop a JSON file following the sche
 
 ```
 NGES/
-├── main.py                  # CLI entry point
-├── config.yaml              # Weights, thresholds, baselines
-├── requirements.txt
 ├── nges/
-│   ├── calculator.py        # Scoring formula & grade table
-│   ├── history.py           # Cycle result persistence
-│   ├── runner.py            # Benchmark orchestrator
-│   ├── reporter.py          # Terminal output (rich)
-│   ├── models/              # Anthropic & OpenAI adapters
-│   ├── axes/                # A / B / C evaluators
-│   ├── judge/               # LLM-as-Judge module
-│   └── tasks/               # Task loader & schema validation
-└── tasks/                   # Built-in benchmark task files
+│   ├── models/
+│   │   ├── base.py          ← 여기에 내 모델 연결
+│   │   ├── anthropic_model.py
+│   │   └── openai_model.py
+│   ├── judge/
+│   │   ├── rule_judge.py    ← API 키 없이 채점
+│   │   └── llm_judge.py     ← LLM 기반 정밀 채점
+│   ├── axes/                ← A / B / C 평가 로직
+│   ├── calculator.py        ← NGES 공식
+│   ├── history.py           ← 사이클 결과 저장
+│   ├── runner.py            ← 실행 오케스트레이터
+│   └── reporter.py          ← 터미널 출력
+└── tasks/                   ← 벤치마크 태스크 JSON
 ```
-
----
-
-## Requirements
-
-- Python 3.10+
-- `ANTHROPIC_API_KEY` and/or `OPENAI_API_KEY` set as environment variables
 
 ---
 
 ## Documentation
 
-- [NGES v1.0 Official Definition](./NGES_v1.0_Definition.md) — Full scoring spec, formulas, grade table
+- [Custom Model Guide](./CUSTOM_MODEL_GUIDE.md) — 내 모델 연결 방법 상세 가이드
+- [NGES v1.0 Definition](./NGES_v1.0_Definition.md) — 평가 기준 공식 정의서
 
 ---
 
