@@ -1,13 +1,14 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "nges"
 version = "1.0.0"
 description = "Nexus Growth Evaluation Standard — benchmark that measures how fast your AI is growing"
 readme = "README.md"
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "Park Se Yeon" }]
 requires-python = ">=3.10"
 keywords = ["ai", "benchmark", "evaluation", "llm", "growth", "nexus"]
@@ -15,7 +16,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -40,10 +40,21 @@ Documentation = "https://github.com/parksy1625/NGES/blob/main/NGES_v1.0_Definiti
 Issues = "https://github.com/parksy1625/NGES/issues"
 
 [project.scripts]
-nges = "main:cli"
+nges = "nges.cli:cli"
 
 [tool.setuptools.packages.find]
 include = ["nges*"]
 
 [tool.setuptools.package-data]
-nges = ["../tasks/*.json", "../config.yaml"]
+nges = ["py.typed"]
+
+[tool.setuptools.data-files]
+"nges-tasks" = [
+    "tasks/a1_problem_solving.json",
+    "tasks/a2_reasoning.json",
+    "tasks/a3_memory_recall.json",
+    "tasks/a4_consistency.json",
+    "tasks/a5_goal_tracking.json",
+    "tasks/b3_adaptation.json",
+    "config.yaml",
+]
