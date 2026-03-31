@@ -1,0 +1,23 @@
+# Hold-out tasks — never commit (anti-gaming protection)
+tasks/holdout/
+
+# Runtime output
+history/
+reports/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Environment
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db

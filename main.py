@@ -49,14 +49,17 @@ def cli():
 # ── run 커맨드 ────────────────────────────────────────────────────────
 
 @cli.command()
-@click.option("--model",   required=True,  help="평가할 모델 (예: claude, gpt4o, anthropic:claude-opus-4-6)")
-@click.option("--cycle",   default=None,   type=int, help="사이클 번호. 미지정 시 마지막 사이클 + 1 자동 계산")
-@click.option("--judge",   default=None,   help="Judge 모델 (미지정 시 config.yaml 기본값 사용)")
-@click.option("--tasks",   default=None,   help="태스크 디렉터리 경로 (기본: ./tasks)")
-@click.option("--history", default=None,   help="히스토리 디렉터리 경로 (기본: ./history)")
-@click.option("--config",  default="./config.yaml", help="설정 파일 경로")
+@click.option("--model",    required=True,  help="평가할 모델 (예: claude, gpt4o, anthropic:claude-opus-4-6)")
+@click.option("--cycle",    default=None,   type=int, help="사이클 번호. 미지정 시 마지막 사이클 + 1 자동 계산")
+@click.option("--judge",    default=None,   help="Judge 모델 (미지정 시 config.yaml 기본값 사용)")
+@click.option("--tasks",    default=None,   help="태스크 디렉터리 경로 (기본: ./tasks)")
+@click.option("--history",  default=None,   help="히스토리 디렉터리 경로 (기본: ./history)")
+@click.option("--config",   default="./config.yaml", help="설정 파일 경로")
 @click.option("--save-report", is_flag=True, default=False, help="JSON 리포트를 ./reports/ 에 저장")
-def run(model, cycle, judge, tasks, history, config, save_report):
+@click.option("--dynamic",  is_flag=True,   default=False, help="LLM이 태스크를 실행마다 동적 생성 (벤치마크 오염 방지)")
+@click.option("--holdout",  is_flag=True,   default=False, help="공개 태스크 대신 비공개 hold-out 세트 사용")
+@click.option("--holdout-version", default=None, help="특정 hold-out 버전 파일명 (기본: 최신)")
+def run(model, cycle, judge, tasks, history, config, save_report, dynamic, holdout, holdout_version):
     """AI 모델을 NGES 기준으로 벤치마크 실행."""
     cfg = load_config(config)
 
@@ -75,6 +78,8 @@ def run(model, cycle, judge, tasks, history, config, save_report):
         from nges.models.registry import get_model
         from nges.judge.llm_judge import LLMJudge
         from nges.tasks.loader import TaskLoader
+        from nges.tasks.generator import TaskGenerator
+        from nges.tasks.holdout import HoldoutManager
         from nges.history import HistoryManager
         from nges.runner import NGESRunner
         from nges.reporter import print_report
@@ -102,9 +107,45 @@ def run(model, cycle, judge, tasks, history, config, save_report):
 
     llm_judge = LLMJudge(judge_model)
 
-    # 히스토리 + 태스크 초기화
-    history_mgr  = HistoryManager(history_path)
-    task_loader  = TaskLoader(tasks_path)
+    # 히스토리 초기화
+    history_mgr = HistoryManager(history_path)
+
+    # ── 태스크 소스 결정 ──────────────────────────────────────────────
+    if holdout and dynamic:
+        click.echo("[오류] --holdout 과 --dynamic 은 동시에 사용할 수 없습니다.", err=True)
+        sys.exit(1)
+
+    if dynamic:
+        click.echo("[동적 생성 모드] LLM이 태스크를 생성합니다...")
+        generator = TaskGenerator(target_model)
+        all_tasks = generator.generate_all()
+        click.echo(f"  시드: {generator.seed}  |  총 {sum(len(v) for v in all_tasks.values())}개 태스크 생성됨")
+
+        class _DynamicLoader:
+            def load(self, axis): return all_tasks.get(axis.upper(), [])
+            def load_all(self): return all_tasks
+
+        task_loader = _DynamicLoader()
+
+    elif holdout:
+        click.echo("[Hold-out 모드] 비공개 태스크 세트를 사용합니다...")
+        holdout_mgr = HoldoutManager(
+            str(Path(tasks_path) / "holdout")
+        )
+        if holdout_version:
+            ho_tasks = holdout_mgr.load(holdout_version)
+        else:
+            ho_tasks = holdout_mgr.load_latest()
+        click.echo(f"  {sum(len(v) for v in ho_tasks.values())}개 hold-out 태스크 로드됨")
+
+        class _HoldoutLoader:
+            def load(self, axis): return ho_tasks.get(axis.upper(), [])
+            def load_all(self): return ho_tasks
+
+        task_loader = _HoldoutLoader()
+
+    else:
+        task_loader = TaskLoader(tasks_path)
 
     # 사이클 번호 결정
     if cycle is None:
@@ -177,6 +218,74 @@ def report(model, history, config):
 
     all_cycles = history_mgr.load_all(model_name)
     print_history_report(all_cycles, model_name)
+
+
+# ── generate-holdout 커맨드 ───────────────────────────────────────────
+
+@cli.command("generate-holdout")
+@click.option("--model",  required=True, help="태스크 생성에 사용할 LLM")
+@click.option("--tasks",  default=None,  help="태스크 디렉터리 경로 (기본: ./tasks)")
+@click.option("--label",  default="",    help="버전 식별 레이블 (예: v2, sprint3)")
+@click.option("--config", default="./config.yaml")
+def generate_holdout(model, tasks, label, config):
+    """비공개 hold-out 태스크 세트를 LLM으로 생성한다. (git에 올라가지 않음)"""
+    cfg = load_config(config)
+    tasks_path = tasks or cfg.get("tasks", {}).get("path", "./tasks")
+
+    try:
+        from nges.models.registry import get_model
+        from nges.tasks.generator import TaskGenerator
+        from nges.tasks.holdout import HoldoutManager
+    except ImportError as e:
+        click.echo(f"[오류] {e}", err=True)
+        sys.exit(1)
+
+    click.echo(f"Hold-out 생성 모델: {model}")
+    try:
+        gen_model = get_model(model)
+    except (ValueError, ImportError) as e:
+        click.echo(f"[오류] {e}", err=True)
+        sys.exit(1)
+
+    generator = TaskGenerator(gen_model)
+    holdout_mgr = HoldoutManager(str(Path(tasks_path) / "holdout"))
+
+    filepath = holdout_mgr.generate_and_save(generator, label=label)
+    click.echo(f"\nHold-out 세트 저장 완료: {filepath}")
+    click.echo("이 파일은 .gitignore로 보호되어 공개 저장소에 올라가지 않습니다.")
+
+
+# ── list-holdout 커맨드 ────────────────────────────────────────────────
+
+@cli.command("list-holdout")
+@click.option("--tasks",  default=None, help="태스크 디렉터리 경로")
+@click.option("--config", default="./config.yaml")
+def list_holdout(tasks, config):
+    """저장된 hold-out 세트 버전 목록을 출력한다."""
+    cfg = load_config(config)
+    tasks_path = tasks or cfg.get("tasks", {}).get("path", "./tasks")
+
+    try:
+        from nges.tasks.holdout import HoldoutManager
+    except ImportError as e:
+        click.echo(f"[오류] {e}", err=True)
+        sys.exit(1)
+
+    holdout_mgr = HoldoutManager(str(Path(tasks_path) / "holdout"))
+    versions = holdout_mgr.list_versions()
+
+    if not versions:
+        click.echo("저장된 hold-out 세트가 없습니다.")
+        click.echo("python main.py generate-holdout --model claude 로 생성하세요.")
+        return
+
+    click.echo(f"\n저장된 hold-out 세트 ({len(versions)}개):\n")
+    for v in versions:
+        counts = v.get("task_counts", {})
+        total = sum(counts.values())
+        label = f" [{v['label']}]" if v.get("label") else ""
+        click.echo(f"  {v['filename']}{label}")
+        click.echo(f"    생성: {v['created_at'][:19]}  |  모델: {v['generator_model']}  |  태스크: {total}개")
 
 
 # ── list-models 커맨드 ────────────────────────────────────────────────
