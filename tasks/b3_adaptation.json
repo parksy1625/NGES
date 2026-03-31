@@ -1,0 +1,61 @@
+{
+  "axis": "B3",
+  "version": "1.0",
+  "description": "새 환경 적응력 — 처음 접하는 도메인에서 적응 속도 측정",
+  "tasks": [
+    {
+      "id": "b3_001",
+      "domain": "quantum_computing",
+      "novel": true,
+      "difficulty": 4,
+      "prompt": "A qubit is in the state |ψ⟩ = (1/√2)|0⟩ + (1/√2)|1⟩. If we measure it in the computational basis, what is the probability of measuring |0⟩? Show your reasoning.",
+      "rubric": "Award 1.0 if: (1) correctly identifies probability as |1/√2|² = 0.5 or 50%, (2) shows the Born rule application. Award 0.5 if correct answer without explanation. Award 0.0 if wrong probability.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "b3_002",
+      "domain": "quantum_computing",
+      "novel": true,
+      "difficulty": 5,
+      "prompt": "What is the key difference between a classical bit and a qubit in terms of superposition? Then explain what quantum entanglement means for a 2-qubit system.",
+      "rubric": "Award 1.0 if: (1) correctly explains superposition (qubit can be 0 AND 1 simultaneously vs classical bit is either 0 or 1), (2) correctly explains entanglement (measurement of one qubit instantly determines the state of the other), (3) uses accurate terminology. Award 0.6 if explains superposition correctly but entanglement explanation is vague. Award 0.2 if only partially correct on both.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "b3_003",
+      "domain": "marine_biology",
+      "novel": true,
+      "difficulty": 3,
+      "prompt": "Explain the difference between bioluminescence and fluorescence in marine organisms. Give one example of each.",
+      "rubric": "Award 1.0 if: (1) bioluminescence correctly defined as self-generated light via chemical reaction, (2) fluorescence correctly defined as absorption and re-emission of external light, (3) one correct example each (e.g., anglerfish / certain jellyfish for bioluminescence; coral for fluorescence). Award 0.5 if definitions are roughly correct but examples are missing or wrong. Award 0.0 if fundamentally confused.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "b3_004",
+      "domain": "marine_biology",
+      "novel": true,
+      "difficulty": 4,
+      "prompt": "What are the main ecological roles of coral reefs in marine ecosystems? List at least 3 distinct roles with brief explanations.",
+      "rubric": "Award 1.0 if: (1) at least 3 distinct ecological roles listed (e.g., biodiversity habitat, shoreline protection, nutrient cycling, food chain support), (2) each role has a brief accurate explanation. Award 0.6 if 2 roles with good explanation. Award 0.2 if only 1 role or roles are vague.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "b3_005",
+      "domain": "behavioral_economics",
+      "novel": true,
+      "difficulty": 4,
+      "prompt": "What is 'loss aversion' in behavioral economics? How does it differ from rational expected utility theory? Give a concrete everyday example.",
+      "rubric": "Award 1.0 if: (1) loss aversion correctly defined (losses feel ~2x worse than equivalent gains), (2) correctly contrasts with rational utility theory (which treats equal gains and losses symmetrically), (3) concrete example is accurate (e.g., reluctance to sell losing stocks). Award 0.6 if definition is correct but contrast or example is weak. Award 0.0 if fundamentally wrong definition.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "b3_006",
+      "domain": "behavioral_economics",
+      "novel": true,
+      "difficulty": 5,
+      "prompt": "Explain the 'endowment effect' and how it relates to loss aversion. Design a simple experiment to test whether a group of people exhibit the endowment effect.",
+      "rubric": "Award 1.0 if: (1) endowment effect correctly defined (people overvalue things they own), (2) connection to loss aversion is explained (owning something makes potential loss of it feel worse), (3) experiment design is valid (e.g., mug experiment: give half the group mugs, ask both groups their selling/buying price). Award 0.6 if definition and connection are correct but experiment is vague. Award 0.2 if only partial understanding shown.",
+      "answer_check": "llm_judge"
+    }
+  ]
+}

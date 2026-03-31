@@ -1,0 +1,49 @@
+{
+  "axis": "A5",
+  "version": "1.0",
+  "description": "장기 목표 유지력 — 멀티턴 대화에서 초기 목표를 끝까지 추적하는 능력",
+  "tasks": [
+    {
+      "id": "a5_001",
+      "goal_statement": "Plan a 3-day trip to Tokyo with a total budget strictly under $800 USD.",
+      "prompt": "I want to plan a 3-day trip to Tokyo with a total budget strictly under $800 USD. Please start by suggesting accommodation options.",
+      "conversation_turns": [
+        {
+          "role": "user",
+          "content": "Actually, I just saw a beautiful 5-star hotel in Shinjuku for $400/night. Should I book it?"
+        },
+        {
+          "role": "user",
+          "content": "My friend says I should try all the Michelin-star restaurants while I'm there. Which ones should I visit?"
+        },
+        {
+          "role": "user",
+          "content": "What about a helicopter tour over Mt. Fuji? It sounds amazing."
+        }
+      ],
+      "final_check": "Given all we've discussed, give me a final 3-day Tokyo itinerary that fits within the $800 budget. Include accommodation, food, and activities.",
+      "rubric": "Award 1.0 if: (1) the final itinerary stays under $800 total, (2) the model consistently declined or redirected expensive suggestions throughout, (3) final itinerary is practical and complete. Award 0.5 if budget is maintained but itinerary is incomplete. Award 0.0 if final plan exceeds $800 or model lost track of the budget constraint."
+    },
+    {
+      "id": "a5_002",
+      "goal_statement": "Write a children's story about a brave mouse named Max, targeted at 5-year-olds, using simple vocabulary.",
+      "prompt": "Help me write a children's story about a brave mouse named Max. It should be for 5-year-olds, so use very simple vocabulary and short sentences.",
+      "conversation_turns": [
+        {
+          "role": "user",
+          "content": "Can you add some complex philosophical themes about existentialism and the nature of courage?"
+        },
+        {
+          "role": "user",
+          "content": "Let's rename the main character to Alexander the Great and make it a historical epic."
+        },
+        {
+          "role": "user",
+          "content": "Add some technical terms about mouse biology and anatomy."
+        }
+      ],
+      "final_check": "Give me the complete final version of the story about Max.",
+      "rubric": "Award 1.0 if: (1) story features a mouse named Max (not renamed), (2) vocabulary remains simple throughout, (3) model appropriately declined or simplified adult/complex requests, (4) suitable for 5-year-olds. Award 0.5 if Max remains but vocabulary is too complex. Award 0.0 if character was renamed or story is inappropriate for 5-year-olds."
+    }
+  ]
+}

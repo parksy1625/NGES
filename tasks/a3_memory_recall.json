@@ -1,0 +1,42 @@
+{
+  "axis": "A3",
+  "version": "1.0",
+  "description": "기억 회수 정확성 — 주입된 정보를 방해 턴 이후에 정확히 인출",
+  "tasks": [
+    {
+      "id": "a3_001",
+      "memory_injection": "Important system information: The project codename is AURORA, the launch date is April 5th, 2024, and the lead engineer is Dr. Sarah Chen.",
+      "recall_prompt": "What is the project codename that was mentioned earlier?",
+      "expected_contains": "AURORA",
+      "delay_turns": 3
+    },
+    {
+      "id": "a3_002",
+      "memory_injection": "Customer record: Customer ID is CX-7749, their subscription plan is 'Enterprise Gold', and their annual renewal date is November 15th.",
+      "recall_prompt": "What subscription plan does the customer have?",
+      "expected_contains": "Enterprise Gold",
+      "delay_turns": 4
+    },
+    {
+      "id": "a3_003",
+      "memory_injection": "Meeting notes: The quarterly budget approved is $2.4 million, the project deadline is Q3 2025, and the primary stakeholder is the VP of Engineering, James Whitfield.",
+      "recall_prompt": "What is the approved quarterly budget from the meeting notes?",
+      "expected_contains": "2.4",
+      "delay_turns": 3
+    },
+    {
+      "id": "a3_004",
+      "memory_injection": "Security credentials (test environment only): Server hostname is nexus-prod-07, port number is 8443, and the environment tag is STAGING-BETA.",
+      "recall_prompt": "What is the port number that was provided earlier?",
+      "expected_contains": "8443",
+      "delay_turns": 5
+    },
+    {
+      "id": "a3_005",
+      "memory_injection": "Conference registration: Attendee name is Dr. Min-Ji Park, badge number is B-2291, session track is 'AI Safety & Alignment', and the keynote time is 9:30 AM on Day 2.",
+      "recall_prompt": "What session track is the attendee registered for?",
+      "expected_contains": "AI Safety",
+      "delay_turns": 4
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "axis": "A1",
+  "version": "1.0",
+  "description": "문제 해결 정확도 — 수학, 논리, 프로그래밍, 사실 추론",
+  "tasks": [
+    {
+      "id": "a1_001",
+      "type": "multiple_choice",
+      "domain": "math",
+      "difficulty": 2,
+      "prompt": "What is 15% of 240?\nA) 36\nB) 38\nC) 34\nD) 40\n\nAnswer with only the letter (A, B, C, or D).",
+      "expected_answer": "A",
+      "answer_check": "contains"
+    },
+    {
+      "id": "a1_002",
+      "type": "multiple_choice",
+      "domain": "math",
+      "difficulty": 3,
+      "prompt": "A train travels 120 km in 1.5 hours. What is its average speed in km/h?\nA) 80\nB) 60\nC) 90\nD) 75\n\nAnswer with only the letter.",
+      "expected_answer": "A",
+      "answer_check": "contains"
+    },
+    {
+      "id": "a1_003",
+      "type": "open_ended",
+      "domain": "logic",
+      "difficulty": 3,
+      "prompt": "All bloops are razzles. All razzles are lazzles. Therefore, are all bloops lazzles? Answer with only 'yes' or 'no'.",
+      "expected_answer": "yes",
+      "answer_check": "contains"
+    },
+    {
+      "id": "a1_004",
+      "type": "open_ended",
+      "domain": "logic",
+      "difficulty": 4,
+      "prompt": "There are 5 houses in a row, each painted a different color. The green house is immediately to the left of the white house. The green house owner drinks coffee. Who drinks coffee? Answer: the owner of the green house. What color is to the right of green? Answer with only the color name.",
+      "expected_answer": "white",
+      "answer_check": "contains"
+    },
+    {
+      "id": "a1_005",
+      "type": "code_generation",
+      "domain": "programming",
+      "difficulty": 3,
+      "prompt": "Write a Python function called `is_palindrome(s)` that returns True if the string s is a palindrome (ignoring case and spaces), False otherwise. Provide only the function definition.",
+      "rubric": "Award 1.0 if: (1) function is named is_palindrome, (2) correctly ignores case, (3) correctly ignores spaces, (4) returns True/False. Award 0.5 if basic palindrome check works but ignores case or spaces. Award 0.0 if function is fundamentally broken.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "a1_006",
+      "type": "multiple_choice",
+      "domain": "science",
+      "difficulty": 2,
+      "prompt": "What is the chemical symbol for gold?\nA) Go\nB) Gd\nC) Au\nD) Ag\n\nAnswer with only the letter.",
+      "expected_answer": "C",
+      "answer_check": "contains"
+    },
+    {
+      "id": "a1_007",
+      "type": "open_ended",
+      "domain": "math",
+      "difficulty": 4,
+      "prompt": "If f(x) = 2x² - 3x + 1, what is f(3)? Provide only the numeric answer.",
+      "expected_answer": "10",
+      "answer_check": "contains"
+    },
+    {
+      "id": "a1_008",
+      "type": "open_ended",
+      "domain": "reasoning",
+      "difficulty": 3,
+      "prompt": "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost? Answer in cents (e.g., '5 cents').",
+      "expected_answer": "5",
+      "answer_check": "contains"
+    },
+    {
+      "id": "a1_009",
+      "type": "code_generation",
+      "domain": "programming",
+      "difficulty": 4,
+      "prompt": "Write a Python function called `fibonacci(n)` that returns the nth Fibonacci number (0-indexed: fibonacci(0)=0, fibonacci(1)=1, fibonacci(2)=1). Provide only the function definition.",
+      "rubric": "Award 1.0 if: fibonacci(0)=0, fibonacci(1)=1, fibonacci(2)=1, fibonacci(10)=55, handles n>=0 correctly. Award 0.5 if off-by-one but otherwise correct. Award 0.0 if fundamentally broken.",
+      "answer_check": "llm_judge"
+    },
+    {
+      "id": "a1_010",
+      "type": "multiple_choice",
+      "domain": "geography",
+      "difficulty": 2,
+      "prompt": "Which is the longest river in the world?\nA) Amazon\nB) Nile\nC) Yangtze\nD) Mississippi\n\nAnswer with only the letter.",
+      "expected_answer": "B",
+      "answer_check": "contains"
+    }
+  ]
+}
